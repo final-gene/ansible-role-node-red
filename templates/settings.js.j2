@@ -1,0 +1,166 @@
+{{ ansible_managed | comment('c') }}
+
+/**
+ * This is file is based on the default settings file provided by Node-RED:
+ *    https://github.com/node-red/node-red/blob/master/packages/node_modules/node-red/settings.js
+ *
+ * It can contain any valid JavaScript code that will get run when Node-RED is started.
+ *
+ * For more information about individual settings, refer to the documentation:
+ *    https://nodered.org/docs/user-guide/runtime/configuration
+ **/
+
+module.exports = {
+
+  flowFile: "{{ nodered_flow_file }}",
+
+  {% if nodered_credential_secret != '' -%}
+  credentialSecret: "{{ nodered_credential_secret }}",
+  {% endif %}
+
+  flowFilePretty: true,
+
+  userDir: "{{ nodered_user_directory }}/",
+
+  nodesDir: "{{ nodered_nodes_directory }}/",
+
+  {% if nodered_admin_sso_google is defined -%}
+  adminAuth: {
+    type: "strategy",
+    strategy: {
+      name: "google",
+      label: "Sign in with Google",
+      icon: "fa-google",
+      strategy: require("passport-google-oauth").OAuth2Strategy,
+      options: {
+        clientID: "{{ nodered_admin_sso_google.client_id }}",
+        clientSecret: "{{ nodered_admin_sso_google.client_secret }}",
+        scope: "email",
+        callbackURL: "https://{{ nodered_domain_name }}/auth/strategy/callback",
+        verify: function (token, tokenSecret, profile, done) {
+          profile.username = profile.emails.find(x => x.verified).value;
+          done(null, profile);
+        },
+      },
+    },
+    users: function (username) {
+      return Promise.resolve({
+        username: username,
+        permissions: "*"
+      });
+    },
+  },
+  {% elif nodered_admin_users | count > 0 -%}
+  adminAuth: {
+    type: "credentials",
+    users: {{ nodered_admin_users | tojson }},
+  },
+  {% endif %}
+
+  {% if nodered_https_private_key_file != '' and nodered_https_certificate_file != '' -%}
+  https: {
+    key: require("fs").readFileSync("{{ nodered_https_private_key_file }}"),
+    cert: require("fs").readFileSync("{{ nodered_https_certificate_file }}")
+  },
+  {% endif %}
+
+  requireHttps: {{ nodered_require_https | bool | lower }},
+
+  uiPort: {{ nodered_ui_port }},
+
+  {% if nodered_ui_host != '' -%}
+  uiHost: "{{ nodered_ui_host }}",
+  {% endif %}
+
+  apiMaxLength: "{{ nodered_api_max_length }}",
+
+  {% if nodered_server_options is defined -%}
+  httpServerOptions: {{ nodered_server_options | tojson }},
+  {% endif %}
+
+  {% if nodered_http_admin_root is defined -%}
+  httpAdminRoot: "{{ nodered_http_admin_root }}",
+  {% endif %}
+
+  {% if nodered_http_node_root is defined -%}
+  httpNodeRoot: "{{ nodered_http_node_root }}",
+  {% endif %}
+
+  {% if nodered_http_node_cors is defined -%}
+  httpNodeCors: {{ nodered_server_options | tojson }},
+  {% endif %}
+
+  {% if nodered_http_static_root is defined -%}
+  httpStaticRoot: "{{ nodered_http_static_root }}",
+  {% endif %}
+
+  lang: "{{ nodered_lang }}",
+
+  diagnostics: {
+    enabled: {{ nodered_diagnostics_enabled | bool | lower }},
+    ui: {{ nodered_diagnostics_ui | bool | lower }},
+  },
+
+  runtimeState: {
+    enabled: {{ nodered_runtime_state_enabled | bool | lower }},
+    ui: {{ nodered_runtime_state_ui | bool | lower }},
+  },
+
+  logging: {
+    console: {
+      level: "{{ nodered_logging_console_level }}",
+      metrics: {{ nodered_logging_console_metrics | bool | lower }},
+      audit: {{ nodered_logging_console_audit | bool | lower }},
+    },
+  },
+
+  contextStorage: {{ nodered_context_storage | tojson }},
+
+  exportGlobalContextKeys: {{ nodered_export_global_context_keys | bool | lower }},
+
+  externalModules: {
+    autoInstall: {{ nodered_external_modules_auto_install | bool | lower }},
+    autoInstallRetry: {{ nodered_external_modules_auto_install_retry }},
+    palette: {
+        allowInstall: {{ nodered_external_modules_palette_allow_install | bool | lower }},
+        allowUpdate: {{ nodered_external_modules_palette_allow_update | bool | lower }},
+        allowUpload: {{ nodered_external_modules_palette_allow_upload | bool | lower }},
+        allowList: {{ nodered_external_modules_palette_allow_list | tojson }},
+        denyList: {{ nodered_external_modules_palette_deny_list | tojson }},
+        allowUpdateList: {{ nodered_external_modules_palette_allow_update_list | tojson }},
+        denyUpdateList: {{ nodered_external_modules_palette_deny_update_list | tojson }},
+    },
+    modules: {
+        allowInstall: {{ nodered_external_modules_module_allow_install | bool | lower }},
+        allowList: {{ nodered_external_modules_module_allow_list | tojson }},
+        denyList: {{ nodered_external_modules_module_deny_list | tojson }},
+    },
+  },
+
+  disableEditor: {{ nodered_disable_editor | bool | lower }},
+
+  editorTheme: {
+    theme: "{{ nodered_editor_theme }}",
+
+    tours: {{ nodered_editor_tours | bool | lower }},
+
+    projects: {
+      enabled: {{ nodered_editor_projects_enabled | bool | lower }},
+      workflow: {
+        mode: "{{ nodered_editor_projects_workflow_mode }}",
+      }
+    },
+
+    codeEditor: {
+      lib: "{{ nodered_editor_code_editor_lib }}",
+      options: {{ nodered_editor_code_editor_options | tojson }},
+    },
+  },
+
+  functionExternalModules: {{ nodered_function_external_modules | bool | lower }},
+
+  {% if nodered_http_static_root is defined -%}
+  {{ nodered_settings_extra_content | tojson }},
+  {% endif %}
+
+}

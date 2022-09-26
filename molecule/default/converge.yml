@@ -1,0 +1,6 @@
+---
+- name: Converge Installation
+  hosts: all
+
+  roles:
+    - role: finalgene.node_red

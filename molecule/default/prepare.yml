@@ -1,0 +1,8 @@
+---
+- name: Prepare
+  hosts: all
+  tasks:
+    - name: Ensure apt cache is up to date
+      when: ansible_os_family | lower == 'debian'
+      ansible.builtin.apt:
+        update_cache: true
