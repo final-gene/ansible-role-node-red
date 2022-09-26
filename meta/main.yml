@@ -1,0 +1,24 @@
+---
+galaxy_info:
+  role_name: node_red
+  author: Frank Giesecke
+  description: Install Node-Red
+  company: final gene
+  license: MIT
+  min_ansible_version: "2.13"
+  platforms:
+    - name: Debian
+      versions:
+        - buster
+        - bullseye
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: EL
+      versions:
+        - all
+  galaxy_tags:
+    - nodered
+
+dependencies: []

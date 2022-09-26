@@ -1,0 +1,6 @@
+---
+- name: restart node red
+  listen: nodered_restart
+  ansible.builtin.service:
+    name: nodered.service
+    state: restarted

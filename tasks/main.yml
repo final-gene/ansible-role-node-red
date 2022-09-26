@@ -1,0 +1,138 @@
+---
+- name: ensure build tools are installed
+  ansible.builtin.package:
+    name: "{{ nodered_build_tools[ansible_os_family | lower] }}"
+
+- name: ensure node-red group exists
+  ansible.builtin.group:
+    name: "{{ nodered_group }}"
+    state: present
+
+- name: ensure node-red user exists
+  notify: nodered_restart
+  ansible.builtin.user:
+    comment: nodered user
+    create_home: true
+    name: "{{ nodered_user }}"
+    group: "{{ nodered_group }}"
+    groups: "{{ nodered_groups }}"
+    password: "*"
+    state: present
+    system: true
+    update_password: on_create
+
+- name: determine user home directory
+  block:
+    - name: get user home directory
+      register: _nodered_user_home
+      changed_when: false
+      ansible.builtin.shell:
+        cmd: "getent passwd {{ nodered_user }}  | awk -F: '{ print $6 }'"
+
+    - name: read user home directory
+      ansible.builtin.set_fact:
+        _nodered_user_home: "{{ _nodered_user_home.stdout }}"
+
+- name: check for raspberry os
+  register: _raspberry_os
+  ansible.builtin.stat:
+    path: /etc/default/raspberrypi-kernel
+
+- name: ensure offical installer exists
+  ansible.builtin.get_url:
+    url: "{{ nodered_installer_url[ansible_os_family | lower] }}"
+    dest: /usr/local/bin/update-nodejs-and-nodered
+    mode: "0755"
+
+- name: determine node version
+  block:
+    - name: get node version
+      register: _node_version
+      changed_when: false
+      ansible.builtin.command:
+        cmd: node --version
+
+    - name: read node version
+      ansible.builtin.set_fact:
+        _node_version: "{{ _node_version.stdout }}"
+
+  rescue:
+    - name: no node version found
+      ansible.builtin.set_fact:
+        _node_version: ""
+
+- name: determine node-red version
+  block:
+    - name: get node-red version
+      register: _nodered_version
+      changed_when: false
+      ansible.builtin.shell:
+        cmd: npm -g list node-red --json | jq -r '.dependencies["node-red"].version'
+
+    - name: read node-red version
+      ansible.builtin.set_fact:
+        _nodered_version: "{{ _nodered_version.stdout }}"
+
+  rescue:
+    - name: no node-red version found
+      ansible.builtin.set_fact:
+        _nodered_version: ""
+
+- name: ensure node-red is installed
+  when: >
+    _nodered_version == ''
+    or
+    (
+      nodered_version is defined
+      and
+      _nodered_version != nodered_version
+    )
+    or
+    _node_version == ''
+    or
+    (
+      nodered_node_major_version is defined
+      and
+      _node_version is not match('^v?' ~ nodered_node_major_version ~ '\\.')
+    )
+  notify: nodered_restart
+  ansible.builtin.shell:
+    cmd: >
+      update-nodejs-and-nodered
+      --confirm-root
+      --confirm-install
+      --nodered-user={{ nodered_user }}
+      {% if ansible_os_family | lower == 'redhat' %}
+      '--open-firewall'
+      {% elif ansible_os_family | lower == 'debian' %}
+      {{ '--confirm-pi' if _raspberry_os.stat.exists else '--skip-pi' }}
+      {{ '--allow-low-ports' if nodered_allow_low_ports or nodered_ui_port < 1024 }}
+      {{ '--update-nodes' if nodered_update_nodes }}
+      {{ '--nodered-version=' ~ nodered_version if nodered_version is defined }}
+      {{ '--node' ~ nodered_node_major_version if nodered_node_major_version is defined }}
+      {% endif %}
+
+- name: ensure node-red settings are configured properly
+  notify: nodered_restart
+  ansible.builtin.template:
+    dest: "{{ nodered_user_directory }}/settings.js"
+    src: settings.js.j2
+    mode: "0644"
+    owner: "{{ nodered_user }}"
+    group: "{{ nodered_group }}"
+
+- name: ensure node-red extra npm packages are installed
+  loop: "{{ nodered_extra_npm_packages }}"
+  notify: nodered_restart
+  community.general.npm:
+    name: "{{ item.name }}"
+    path: "{{ nodered_user_directory }}"
+    production: true
+    state: "{{ item.state | default('present') }}"
+    unsafe_perm: true
+    version: "{{ item.version }}"
+
+- name: ensure node-red is enabled
+  ansible.builtin.service:
+    name: nodered.service
+    enabled: true

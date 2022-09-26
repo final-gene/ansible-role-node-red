@@ -1,0 +1,140 @@
+---
+nodered_domain_name: "{{ inventory_hostname }}"
+
+nodered_extra_npm_packages: []
+
+nodered_user: nodered
+
+nodered_group: "{{ nodered_user }}"
+
+nodered_groups: []
+
+nodered_allow_low_ports: false
+
+nodered_update_nodes: false
+
+nodered_flow_file: flows.json
+
+nodered_credential_secret: ""
+
+nodered_user_directory: "{{ _nodered_user_home }}/.node-red"
+
+nodered_nodes_directory: "{{ nodered_user_directory }}/nodes"
+
+# To password protect the Node-RED editor and admin API, the following
+# property can be used. See http://nodered.org/docs/security.html for details.
+nodered_admin_users: []
+
+# Use Google Login to authenticate.
+# See https://discourse.nodered.org/t/authenticating-into-node-red-using-google-oauth-working-solution/10047 for details.
+# nodered_admin_sso_google:
+#   client_id: ""
+#   client_secret: ""
+
+nodered_https_private_key_file: ""
+
+nodered_https_certificate_file: ""
+
+nodered_require_https: false
+
+nodered_ui_host: ""
+
+nodered_ui_port: 1880
+
+nodered_api_max_length: 5mb
+
+nodered_lang: en-US
+
+nodered_diagnostics_enabled: true
+
+nodered_diagnostics_ui: true
+
+nodered_runtime_state_enabled: false
+
+nodered_runtime_state_ui: false
+
+# Level of logging to be recorded. Options are:
+# fatal - only those errors which make the application unusable should be recorded
+# error - record errors which are deemed fatal for a particular request + fatal errors
+# warn - record problems which are non fatal + errors + fatal errors
+# info - record information about the general running of the application + warn + error + fatal errors
+# debug - record information which is more verbose than info + info + warn + error + fatal errors
+# trace - record very detailed logging + debug + info + warn + error + fatal errors
+# off - turn off all logging (doesn't affect metrics or audit)
+nodered_logging_console_level: info
+
+nodered_logging_console_metrics: false
+
+nodered_logging_console_audit: false
+
+# Context Storage
+# The following property can be used to enable context storage. The configuration
+# provided here will enable file-based context that flushes to disk every 30 seconds.
+# Refer to the documentation for further options: https://nodered.org/docs/api/context/
+nodered_context_storage:
+  default:
+    module: "memory"
+
+nodered_export_global_context_keys: false
+
+nodered_external_modules_auto_install: false
+
+nodered_external_modules_auto_install_retry: 30
+
+nodered_external_modules_palette_allow_install: true
+
+nodered_external_modules_palette_allow_update: true
+
+nodered_external_modules_palette_allow_upload: true
+
+nodered_external_modules_palette_allow_list: ["*"]
+
+nodered_external_modules_palette_deny_list: []
+
+nodered_external_modules_palette_allow_update_list: ["*"]
+
+nodered_external_modules_palette_deny_update_list: []
+
+nodered_external_modules_module_allow_install: true
+
+nodered_external_modules_module_allow_list: []
+
+nodered_external_modules_module_deny_list: []
+
+nodered_disable_editor: false
+
+# Customising the editor
+# See https://nodered.org/docs/user-guide/runtime/configuration#editor-themes
+# for all available options.
+
+# See https://github.com/node-red-contrib-themes/theme-collection
+nodered_editor_theme: ""
+
+nodered_editor_tours: true
+
+nodered_editor_projects_enabled: false
+
+nodered_editor_projects_workflow_mode: manual
+
+nodered_editor_code_editor_lib: monaco
+
+nodered_editor_code_editor_options: {}
+
+# Allow the Function node to load additional npm modules directly
+nodered_function_external_modules: true
+
+# nodered_http_admin_root: /admin
+
+# nodered_http_node_root: /red-nodes
+
+# nodered_http_static_root: /static/
+
+# nodered_http_node_cors: {}
+
+# nodered_server_options: {}
+
+# nodered_version:
+
+# nodered_node_major_version:
+
+# nodered_settings_extra_content: {}
