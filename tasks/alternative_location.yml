@@ -1,0 +1,45 @@
+---
+- name: check for existing configuration
+  register: _node_red_config_dir
+  ansible.builtin.stat:
+    path: "{{ nodered_user_directory }}"
+    follow: false
+    get_checksum: false
+    get_attributes: false
+    get_mime: false
+
+- name: move existing configuration
+  when: _node_red_config_dir.stat.isdir
+  block:
+    - name: copy existing configuration to new location
+      notify: nodered_restart
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ nodered_user_directory }}/"
+        dest: "{{ nodered_config_directory }}/"
+        mode: "preserve"
+        owner: "{{ nodered_user }}"
+        group: "{{ nodered_group }}"
+
+    - name: remove old configuration location
+      notify: nodered_restart
+      ansible.builtin.file:
+        path: "{{ nodered_user_directory }}"
+        state: absent
+        follow: false
+
+- name: ensure alternative directory permissions are set properly
+  ansible.builtin.file:
+    path: "{{ nodered_config_directory }}"
+    state: directory
+    recurse: true
+    mode: "0700"
+    owner: "{{ nodered_user }}"
+    group: "{{ nodered_group }}"
+
+- name: create symlink to alternative directory
+  notify: nodered_restart
+  ansible.builtin.file:
+    path: "{{ nodered_user_directory }}"
+    src: "{{ nodered_config_directory }}"
+    state: link

@@ -17,9 +17,7 @@ nodered_flow_file: flows.json
 
 nodered_credential_secret: ""
 
-nodered_user_directory: "{{ _nodered_user_home }}/.node-red"
-
-nodered_nodes_directory: "{{ nodered_user_directory }}/nodes"
+# nodered_config_directory: ""
 
 # To password protect the Node-RED editor and admin API, the following
 # property can be used. See http://nodered.org/docs/security.html for details.

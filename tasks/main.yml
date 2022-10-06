@@ -78,6 +78,12 @@
       ansible.builtin.set_fact:
         _nodered_version: ""
 
+- name: handle alternative node-red location
+  when:
+    - nodered_config_directory is defined
+    - nodered_config_directory != ''
+  ansible.builtin.include_tasks: alternative_location.yml
+
 - name: ensure node-red is installed
   when: >
     _nodered_version == ''
@@ -111,15 +117,6 @@
       {{ '--nodered-version=' ~ nodered_version if nodered_version is defined }}
       {{ '--node' ~ nodered_node_major_version if nodered_node_major_version is defined }}
       {% endif %}
-
-- name: ensure node-red directory exists
-  ansible.builtin.file:
-    path: "{{ nodered_config_directory }}"
-    state: directory
-    recurse: true
-    mode: "0700"
-    owner: "{{ nodered_user }}"
-    group: "{{ nodered_group }}"
 
 - name: ensure node-red settings are configured properly
   notify: nodered_restart
