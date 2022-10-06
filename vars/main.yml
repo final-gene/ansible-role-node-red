@@ -12,3 +12,7 @@ nodered_build_tools:
     - '@development_tools'
     - curl
     - jq
+
+nodered_user_directory: "{{ _nodered_user_home }}/.node-red"
+
+nodered_nodes_directory: "{{ nodered_user_directory }}/nodes"
