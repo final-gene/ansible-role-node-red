@@ -1,0 +1,107 @@
+#!/usr/bin/env sh
+
+set -e
+
+ARGS=""
+BIN_DIR=$(dirname "$0")
+NODE_RED_DATA_DIR="{{ nodered_config_directory | default(nodered_user_directory) }}"
+
+for ARG in "$@"; do
+    case $ARG in
+    -h | --help)
+        HELP="YES"
+        shift
+        ;;
+    *)
+        ARGS="$ARGS$ARG "
+        shift
+        ;;
+    esac
+done
+
+set -- ${ARGS% }
+
+case $1 in
+create)
+    CMD_NAME="$1"
+    CMD_DESCRIPTION="Create backup"
+    ;;
+restore)
+    CMD_NAME="$1"
+    CMD_DESCRIPTION="Restore backup"
+    ;;
+*)
+    HELP="YES"
+    ;;
+esac
+
+BACKUP_FILE="$2"
+
+if [ "${HELP}" = "YES" ]; then
+    cat >&2 <<EOF
+#     #                            ######  ####### ######     ######
+##    #  ####  #####  ######       #     # #       #     #    #     #   ##    ####  #    # #    # #####
+# #   # #    # #    # #            #     # #       #     #    #     #  #  #  #    # #   #  #    # #    #
+#  #  # #    # #    # #####  ##### ######  #####   #     #    ######  #    # #      ####   #    # #    #
+#   # # #    # #    # #            #   #   #       #     #    #     # ###### #      #  #   #    # #####
+#    ## #    # #    # #            #    #  #       #     #    #     # #    # #    # #   #  #    # #
+#     #  ####  #####  ######       #     # ####### ######     ######  #    #  ####  #    #  ####  #
+
+USAGE:
+  $ME [options] COMMAND BACKUP
+
+OPTIONS:
+  -h, --help  Display this help message
+
+COMMANDS:
+  create    Create a backup of the configuration and flows/projects
+  restore   Restore a backup of the configuration and flows/projects
+
+BACKUP:     Path to the backup file
+EOF
+    exit 1
+fi
+
+if [ ! -x "$(command -v tar)" ]; then
+    echo >&2 'Error: tar is not installed.'
+    exit 1
+fi
+
+if [ ! -x "$(command -v systemctl)" ]; then
+    echo >&2 'Error: systemctl is not installed.'
+    exit 1
+fi
+
+if [ "${BACKUP_FILE}" = "" ]; then
+    echo >&2 'Error: backup file name is missing.'
+    exit 1
+fi
+
+if [ "${CMD_NAME}" = "create" ]; then
+    echo "================================================================================"
+    printf "\033[34mCreating Node-RED backup\033[0m\n\n"
+
+    tar -czvf "${BACKUP_FILE}" -C `dirname "${NODE_RED_DATA_DIR}"` `basename "${NODE_RED_DATA_DIR}"`
+
+elif [ "${CMD_NAME}" = "restore" ]; then
+    if [ ! -f "${BACKUP_FILE}" ]; then
+        echo >&2 'Error: backup file '${BACKUP_FILE}' does not exist.'
+        exit 1
+    fi
+
+    echo "================================================================================"
+    printf "\033[34mStopping Node-RED service\033[0m\n\n"
+    systemctl stop nodered.service
+
+    if [ -d "${NODE_RED_DATA_DIR}" ]; then
+      printf "\033[34mSaving current Node-RED configuration\033[0m\n\n"
+      rm -rf "${NODE_RED_DATA_DIR}.bak"
+      mv "${NODE_RED_DATA_DIR}" "${NODE_RED_DATA_DIR}.bak"
+    fi
+
+    printf "\033[34mRestoring Node-RED backup\033[0m\n\n"
+    tar -xvzf "${BACKUP_FILE}" -C `dirname "${NODE_RED_DATA_DIR}"`
+
+    printf "\033[34mStarting Node-RED service\033[0m\n\n"
+    systemctl start nodered.service
+fi
