@@ -2,7 +2,9 @@
 
 ## Description
 
-This role allows installing and basically configuring [Node-Red](https://nodered.org/).
+This role allows installing and basically configuring [Node-RED](https://nodered.org/).
+
+It provides a script `/usr/local/bin/node-red-backup` to back up and restore the configuration and flows/projects.
 
 ## Requirements
 

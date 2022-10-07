@@ -142,3 +142,9 @@
   ansible.builtin.service:
     name: nodered.service
     enabled: true
+
+- name: ensure backup script exists
+  ansible.builtin.template:
+    src: node-red-backup.j2
+    dest: /usr/local/bin/node-red-backup
+    mode: 0755
