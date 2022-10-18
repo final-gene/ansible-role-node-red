@@ -1,6 +1,7 @@
 ---
 galaxy_info:
   role_name: node_red
+  namespace: finalgene
   author: Frank Giesecke
   description: Install Node-Red
   company: final gene
